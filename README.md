@@ -1,7 +1,7 @@
-# Hello, World! JavaScript Action
+# PITest Summary Action
 
-[![GitHub Super-Linter](https://github.com/actions/hello-world-javascript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/actions/hello-world-javascript-action/actions/workflows/ci.yml/badge.svg)
+[![GitHub Super-Linter](https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
+![CI](https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml/badge.svg)
 
 This action prints `Hello, World!` or `Hello, <who-to-greet>!` to the log. To
 learn how this action was built, see

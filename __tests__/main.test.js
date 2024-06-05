@@ -1,90 +1,160 @@
-/**
- * Unit tests for the action's main functionality, src/main.js
- */
+const fs = require('fs')
+const xml2js = require('xml2js')
 const core = require('@actions/core')
-const github = require('@actions/github')
-const main = require('../src/main')
+const { run } = require('../src/main')
 
-// Mock the GitHub Actions core library
-const infoMock = jest.spyOn(core, 'info').mockImplementation()
-const getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-const setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-const setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+jest.mock('fs')
+jest.mock('xml2js')
+jest.mock('@actions/core')
 
-// Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
+describe('run', () => {
+  const mockFilePath = './mutations.xml'
+  const mockXmlData = `
+    <mutations>
+      <mutation detected="true" status="KILLED">
+        <sourceFile>file1.js</sourceFile>
+        <mutatedMethod>method1</mutatedMethod>
+        <lineNumber>10</lineNumber>
+        <description>Mutation 1 description</description>
+      </mutation>
+      <mutation detected="false" status="SURVIVED">
+        <sourceFile>file2.js</sourceFile>
+        <mutatedMethod>method2</mutatedMethod>
+        <lineNumber>20</lineNumber>
+        <description>Mutation 2 description</description>
+      </mutation>
+    </mutations>
+  `
 
-// Other utilities
-const timeRegex = /^\d{2}:\d{2}:\d{2}/
-
-describe('action', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    core.getInput.mockImplementation(name => {
+      if (name === 'file-path') return mockFilePath
+      if (name === 'display-only-survived') return 'false'
+    })
   })
 
-  it('sets the time output', async () => {
-    // Mock the action's inputs
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'who-to-greet':
-          return 'World'
-        default:
-          return ''
-      }
+  test('should read and parse XML file and generate summary report', async () => {
+    fs.readFile.mockImplementation((filePath, callback) => {
+      callback(null, mockXmlData)
     })
 
-    // Mock the action's payload
-    github.context.payload = {}
+    const parseStringMock = jest.fn((data, callback) => {
+      callback(null, {
+        mutations: {
+          mutation: [
+            {
+              $: { detected: 'true', status: 'KILLED' },
+              sourceFile: ['file1.js'],
+              mutatedMethod: ['method1'],
+              lineNumber: ['10'],
+              description: ['Mutation 1 description']
+            },
+            {
+              $: { detected: 'false', status: 'SURVIVED' },
+              sourceFile: ['file2.js'],
+              mutatedMethod: ['method2'],
+              lineNumber: ['20'],
+              description: ['Mutation 2 description']
+            }
+          ]
+        }
+      })
+    })
+    xml2js.Parser.mockImplementation(() => ({ parseString: parseStringMock }))
 
-    await main.run()
+    await run()
 
-    expect(runMock).toHaveReturned()
-    expect(setOutputMock).toHaveBeenCalledWith('time', expect.any(String))
+    expect(fs.readFile).toHaveBeenCalledWith(mockFilePath, expect.any(Function))
+    expect(parseStringMock).toHaveBeenCalledWith(
+      mockXmlData,
+      expect.any(Function)
+    )
+    expect(core.summary.addRaw).toHaveBeenCalledWith(
+      expect.stringContaining('Mutation Test Summary')
+    )
+    expect(core.summary.write).toHaveBeenCalled()
   })
 
-  it('logs the event payload', async () => {
-    // Mock the action's inputs
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'who-to-greet':
-          return 'World'
-        default:
-          return ''
-      }
+  test('should handle file read error', async () => {
+    fs.readFile.mockImplementation((filePath, callback) => {
+      callback(new Error('File read error'))
     })
 
-    // Mock the action's payload
-    github.context.payload = {
-      actor: 'mona'
-    }
+    await run()
 
-    await main.run()
-
-    expect(runMock).toHaveReturned()
-    expect(infoMock).toHaveBeenCalledWith(
-      `The event payload: ${JSON.stringify(github.context.payload, null, 2)}`
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'Error reading XML file: File read error'
     )
   })
 
-  it('sets a failed status', async () => {
-    // Mock the action's inputs
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'who-to-greet':
-          throw new Error('Something went wrong...')
-        default:
-          return ''
-      }
+  test('should handle XML parse error', async () => {
+    fs.readFile.mockImplementation((filePath, callback) => {
+      callback(null, mockXmlData)
     })
 
-    // Mock the action's payload
-    github.context.payload = {
-      actor: 'mona'
-    }
+    const parseStringMock = jest.fn((data, callback) => {
+      callback(new Error('XML parse error'))
+    })
+    xml2js.Parser.mockImplementation(() => ({ parseString: parseStringMock }))
 
-    await main.run()
+    await run()
 
-    expect(runMock).toHaveReturned()
-    expect(setFailedMock).toHaveBeenCalledWith('Something went wrong...')
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'Error parsing XML: XML parse error'
+    )
+  })
+
+  test('should display only survived mutations if display-only-survived is true', async () => {
+    core.getInput.mockImplementation(name => {
+      if (name === 'file-path') return mockFilePath
+      if (name === 'display-only-survived') return 'true'
+    })
+
+    fs.readFile.mockImplementation((filePath, callback) => {
+      callback(null, mockXmlData)
+    })
+
+    const parseStringMock = jest.fn((data, callback) => {
+      callback(null, {
+        mutations: {
+          mutation: [
+            {
+              $: { detected: 'true', status: 'KILLED' },
+              sourceFile: ['file1.js'],
+              mutatedMethod: ['method1'],
+              lineNumber: ['10'],
+              description: ['Mutation 1 description']
+            },
+            {
+              $: { detected: 'false', status: 'SURVIVED' },
+              sourceFile: ['file2.js'],
+              mutatedMethod: ['method2'],
+              lineNumber: ['20'],
+              description: ['Mutation 2 description']
+            }
+          ]
+        }
+      })
+    })
+    xml2js.Parser.mockImplementation(() => ({ parseString: parseStringMock }))
+
+    await run()
+
+    expect(fs.readFile).toHaveBeenCalledWith(mockFilePath, expect.any(Function))
+    expect(parseStringMock).toHaveBeenCalledWith(
+      mockXmlData,
+      expect.any(Function)
+    )
+    expect(core.summary.addRaw).toHaveBeenCalledWith(
+      expect.stringContaining('Mutation Test Summary')
+    )
+    expect(core.summary.addRaw).not.toHaveBeenCalledWith(
+      expect.stringContaining('method1')
+    )
+    expect(core.summary.addRaw).toHaveBeenCalledWith(
+      expect.stringContaining('method2')
+    )
+    expect(core.summary.write).toHaveBeenCalled()
   })
 })
