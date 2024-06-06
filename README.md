@@ -49,6 +49,7 @@ jobs:
         with:
           file-path: ${{ github.event.inputs.file-path }}
 ```
+
 This pipeline will run the PITest mutation tests on a schedule (every day at
 midnight) and summarize the results in the log.
 
