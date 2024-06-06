@@ -48,7 +48,6 @@ jobs:
         uses: yonatankarp/pitest-action@add-action
         with:
           file-path: ${{ github.event.inputs.file-path }}
-
 ```
 This pipeline will run the PITest mutation tests on a schedule (every day at
 midnight) and summarize the results in the log.
@@ -60,5 +59,5 @@ For example, workflow runs, check out the
 
 | Input                   | Default | Description                                    |
 |-------------------------|---------|------------------------------------------------|
-| `file-path`             | `None`  | The path to PIT XML summary report             |
+| `file-path`             |         | The path to PIT XML summary report             |
 | `display-only-survived` | `false` | Whether to display only the survived mutations |
