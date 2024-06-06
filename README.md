@@ -43,9 +43,9 @@ jobs:
       - name: Summarize Mutations
         id: test-action-all-mutations
         # Change @main to a specific commit SHA or version tag, e.g.:
-        # yonatankarp/pitest-action@e76147da8e5c81eaf017dede5645551d4b94427b
-        # yonatankarp/pitest-action@v1.2.3
-        uses: yonatankarp/pitest-action@add-action
+        # yonatankarp/pitest-summary@e76147da8e5c81eaf017dede5645551d4b94427b
+        # yonatankarp/pitest-summary@v1.2.3
+        uses: yonatankarp/pitest-summary@add-action
         with:
           file-path: ${{ github.event.inputs.file-path }}
 ```
