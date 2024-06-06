@@ -3,10 +3,6 @@ const xml2js = require('xml2js')
 const core = require('@actions/core')
 const { run } = require('../src/main')
 
-jest.mock('fs')
-jest.mock('xml2js')
-jest.mock('@actions/core')
-
 describe('run', () => {
   const mockFilePath = './mutations.xml'
   const mockXmlData = `
@@ -27,7 +23,10 @@ describe('run', () => {
   `
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.mock('fs')
+    jest.mock('xml2js')
+    jest.mock('@actions/core')
+
     core.getInput.mockImplementation(name => {
       if (name === 'file-path') return mockFilePath
       if (name === 'display-only-survived') return 'false'
