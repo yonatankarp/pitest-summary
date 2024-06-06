@@ -1,28 +1,19 @@
 # PITest Summary Action
 
-[![GitHub Super-Linter](https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml/badge.svg)
+[linter-badge]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml/badge.svg
+[linter-state]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml
+[ci-badge]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml/badge.svg
+[ci-state]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml
 
-This action prints `Hello, World!` or `Hello, <who-to-greet>!` to the log. To
-learn how this action was built, see
-[Creating a JavaScript action](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action).
+[![Linters][linter-badge]][linter-state] [![CI][ci-badge]][ci-state]
 
-## Create Your Own Action
-
-To create your own action, you can use this repository as a template! Just
-follow the below instructions:
-
-1. Click the **Use this template** button at the top of the repository
-1. Select **Create a new repository**
-1. Select an owner and name for your new repository
-1. Click **Create repository**
-1. Clone your new repository
-
-> [!CAUTION]
->
-> Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
-> details on how to use this file, see
-> [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+This action is a simple action that summarizes the results of a PITest run. It
+parses the XML output of the PITest run and prints a summary of the results to
+the log.
 
 ## Usage
 
