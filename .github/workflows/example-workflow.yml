@@ -3,27 +3,26 @@ name: Example Workflow
 on:
   workflow_dispatch:
     inputs:
-      who-to-greet:
-        description: Who to greet in the log
+      file-path:
+        description: 'The path to the file to be analyzed'
         required: true
-        default: 'World'
-        type: string
+        default: './mutations.xml'
 
 permissions:
   actions: read
   contents: read
 
 jobs:
-  say-hello:
-    name: Say Hello
+  mutation-tests:
+    name: Mutation Testing
     runs-on: ubuntu-latest
 
     steps:
-      # Change @main to a specific commit SHA or version tag, e.g.:
-      # actions/hello-world-javascript-action@e76147da8e5c81eaf017dede5645551d4b94427b
-      # actions/hello-world-javascript-action@v1.2.3
-      - name: Print to Log
-        id: print-to-log
-        uses: actions/hello-world-javascript-action@main
+      - name: Summarize Mutations
+        id: test-action-all-mutations
+        # Change @main to a specific commit SHA or version tag, e.g.:
+        # yonatankarp/pitest-summary@e76147da8e5c81eaf017dede5645551d4b94427b
+        # yonatankarp/pitest-summary@v1.2.3
+        uses: yonatankarp/pitest-summary@add-action
         with:
-          who-to-greet: ${{ inputs.who-to-greet }}
+          file-path: ${{ github.event.inputs.file-path }}
