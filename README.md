@@ -1,28 +1,19 @@
-# Hello, World! JavaScript Action
+# PITest Summary Action
 
-[![GitHub Super-Linter](https://github.com/actions/hello-world-javascript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/actions/hello-world-javascript-action/actions/workflows/ci.yml/badge.svg)
+[linter-badge]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml/badge.svg
+[linter-state]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/linter.yml
+[ci-badge]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml/badge.svg
+[ci-state]:
+  https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml
 
-This action prints `Hello, World!` or `Hello, <who-to-greet>!` to the log. To
-learn how this action was built, see
-[Creating a JavaScript action](https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action).
+[![Linters][linter-badge]][linter-state] [![CI][ci-badge]][ci-state]
 
-## Create Your Own Action
-
-To create your own action, you can use this repository as a template! Just
-follow the below instructions:
-
-1. Click the **Use this template** button at the top of the repository
-1. Select **Create a new repository**
-1. Select an owner and name for your new repository
-1. Click **Create repository**
-1. Clone your new repository
-
-> [!CAUTION]
->
-> Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
-> details on how to use this file, see
-> [About code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners).
+This action is a simple action that summarizes the results of a PITest run. It
+parses the XML output of the PITest run and prints a summary of the results to
+the log.
 
 ## Usage
 
@@ -34,40 +25,40 @@ name: Example Workflow
 on:
   workflow_dispatch:
     inputs:
-      who-to-greet:
-        description: Who to greet in the log
+      file-path:
+        description: 'The path to the file to be analyzed'
         required: true
-        default: 'World'
-        type: string
+        default: './mutations.xml'
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
-  say-hello:
-    name: Say Hello
+  mutation-tests:
+    name: Mutation Testing
     runs-on: ubuntu-latest
 
     steps:
-      # Change @main to a specific commit SHA or version tag, e.g.:
-      # actions/hello-world-javascript-action@e76147da8e5c81eaf017dede5645551d4b94427b
-      # actions/hello-world-javascript-action@v1.2.3
-      - name: Print to Log
-        id: print-to-log
-        uses: actions/hello-world-javascript-action@main
+      - name: Summarize Mutations
+        id: test-action-all-mutations
+        # Change @main to a specific commit SHA or version tag, e.g.:
+        # yonatankarp/pitest-summary@e76147da8e5c81eaf017dede5645551d4b94427b
+        # yonatankarp/pitest-summary@v1.2.3
+        uses: yonatankarp/pitest-summary@add-action
         with:
-          who-to-greet: ${{ inputs.who-to-greet }}
+          file-path: ${{ github.event.inputs.file-path }}
 ```
 
-For example workflow runs, check out the
-[Actions tab](https://github.com/actions/hello-world-javascript-action/actions)!
-:rocket:
+This pipeline will run the PITest mutation tests on a schedule (every day at
+midnight) and summarize the results in the log.
+
+For example, workflow runs, check out the
+[Actions tab](https://github.com/yonatankarp/pitest-summary/actions)! 🚀
 
 ## Inputs
 
-| Input          | Default | Description                     |
-| -------------- | ------- | ------------------------------- |
-| `who-to-greet` | `World` | The name of the person to greet |
-
-## Outputs
-
-| Output | Description             |
-| ------ | ----------------------- |
-| `time` | The time we greeted you |
+| Input                   | Default | Description                                    |
+| ----------------------- | ------- | ---------------------------------------------- |
+| `file-path`             |         | The path to PIT XML summary report             |
+| `display-only-survived` | `false` | Whether to display only the survived mutations |

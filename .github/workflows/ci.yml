@@ -51,12 +51,19 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
-        id: test-action
+      - name: Install Dependencies
+        id: npm-ci
+        run: npm ci
+
+      - name: Test Display All Mutations
+        id: test-action-all-mutations
         uses: ./
         with:
-          who-to-greet: GitHub
+          file-path: ./mutations.xml
 
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+      - name: Test Display Survives Only
+        id: test-action-only-survives
+        uses: ./
+        with:
+          file-path: ./mutations.xml
+          display-only-survived: true
