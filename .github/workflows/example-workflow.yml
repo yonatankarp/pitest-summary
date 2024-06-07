@@ -31,7 +31,7 @@ jobs:
         # Change @main to a specific commit SHA or version tag, e.g.:
         # yonatankarp/pitest-summary@e76147da8e5c81eaf017dede5645551d4b94427b
         # yonatankarp/pitest-summary@v1.2.3
-        uses: yonatankarp/pitest-summary@main
+        uses: yonatankarp/pitest-summary@add-action-implementation # TODO: change back to main!!!
         with:
           file-path: ${{ github.event.inputs.file-path }}
           display-only-survived:
