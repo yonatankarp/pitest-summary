@@ -8,8 +8,10 @@
   https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml/badge.svg
 [ci-state]:
   https://github.com/yonatankarp/pitest-summary/actions/workflows/ci.yml
+[coverage-badge]: badges/coverage.svg
 
 [![Linters][linter-badge]][linter-state] [![CI][ci-badge]][ci-state]
+![coverage.svg][coverage-badge]
 
 This action is a simple action that summarizes the results of a PITest run. It
 parses the XML output of the PITest run and prints a summary of the results to
