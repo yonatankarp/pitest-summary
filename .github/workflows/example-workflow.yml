@@ -7,6 +7,10 @@ on:
         description: 'The path to the file to be analyzed'
         required: true
         default: './mutations.xml'
+      display-only-survived:
+        description: 'Whether to display only survived mutations'
+        required: false
+        default: 'false'
 
 permissions:
   actions: read
@@ -18,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
       - name: Summarize Mutations
         id: test-action-all-mutations
         # Change @main to a specific commit SHA or version tag, e.g.:
@@ -26,3 +34,5 @@ jobs:
         uses: yonatankarp/pitest-summary@add-action
         with:
           file-path: ${{ github.event.inputs.file-path }}
+          display-only-survived:
+            ${{ github.event.inputs.display-only-survived }}

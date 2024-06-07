@@ -56,7 +56,8 @@ This pipeline will run the PITest mutation tests on a schedule (every day at
 midnight) and summarize the results in the log.
 
 For example, workflow runs, check out the
-[Actions tab](https://github.com/yonatankarp/pitest-summary/actions)! 🚀
+[Actions tab](https://github.com/yonatankarp/pitest-summary/actions/workflows/example-workflow.yml)
+for an example of a workflow executions! 🚀
 
 ## Inputs
 
