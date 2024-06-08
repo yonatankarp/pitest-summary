@@ -1,12 +1,31 @@
 /**
  * Unit tests for the action's main functionality, src/main.js
  */
-const core = require('@actions/core')
-const github = require('@actions/github')
-const main = require('../src/main')
 
-describe('action', () => {
-  test('should set failed if file-path input is missing', async () => {})
+const fs = require('node:fs/promises')
+// const xml2js = require('xml2js')
+const core = require('@actions/core')
+
+jest.mock('node:fs/promises')
+// jest.mock('xml2js')
+jest.mock('@actions/core')
+
+describe('/src/main.js', () => {
+  test('should set failed if file-path input is missing', async () => {
+    // arrange
+    const mockReadErrorMessage = 'File not found'
+    core.getInput.mockReturnValueOnce('stam_file.xml')
+    core.getInput.mockReturnValueOnce('false')
+    fs.readFile.mockRejectedValue(new Error(mockReadErrorMessage))
+
+    // act
+    await require('../src/main').run()
+
+    // assert
+    await expect(core.setFailed).toHaveBeenCalledWith(
+      `Error reading XML file: ${mockReadErrorMessage}`
+    )
+  })
 
   test('should handle file read error', async () => {})
 
