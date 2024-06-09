@@ -3,19 +3,17 @@
  */
 
 const fs = require('node:fs/promises')
-// const xml2js = require('xml2js')
+const xml2js = require('xml2js')
 const core = require('@actions/core')
 
 jest.mock('node:fs/promises')
-// jest.mock('xml2js')
+jest.mock('xml2js')
 jest.mock('@actions/core')
 
 describe('/src/main.js', () => {
-  test('should set failed if file-path input is missing', async () => {
+  test('should handle file read error', async () => {
     // arrange
-    const mockReadErrorMessage = 'File not found'
-    core.getInput.mockReturnValueOnce('stam_file.xml')
-    core.getInput.mockReturnValueOnce('false')
+    const mockReadErrorMessage = 'File not found!'
     fs.readFile.mockRejectedValue(new Error(mockReadErrorMessage))
 
     // act
@@ -27,9 +25,27 @@ describe('/src/main.js', () => {
     )
   })
 
-  test('should handle file read error', async () => {})
+  test('should handle XML parse error', async () => {
+    // arrange
+    const mockParseErrorMessage = 'File not found!'
+    const mockXml = require('./fixtures/pitest-report').makeMockXmlReport()
+    fs.readFile.mockResolvedValue(mockXml)
+    xml2js.Parser.mockImplementation(() => {
+      return {
+        parseStringPromise: jest
+          .fn()
+          .mockRejectedValue(new Error(mockParseErrorMessage))
+      }
+    })
 
-  test('should handle XML parse error', async () => {})
+    // act
+    await require('../src/main').run()
+
+    // assert
+    await expect(core.setFailed).toHaveBeenCalledWith(
+      `Error parsing XML: ${mockParseErrorMessage}`
+    )
+  })
 
   test('should handle unknown fields in XML', async () => {})
 
