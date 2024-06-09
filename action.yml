@@ -11,7 +11,7 @@ inputs:
   display-only-survived:
     description: Display only survived mutations
     required: false
-    default: 'false'
+    default: false
 
 runs:
   using: node20
