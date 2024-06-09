@@ -31537,21 +31537,203 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 1713:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 5945:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
-const fs = __nccwpck_require__(3977)
-const xml2js = __nccwpck_require__(6189)
 const core = __nccwpck_require__(2186)
 
-let reportContent = `
+exports.logger = {
+  debug: core.debug,
+  info: core.info,
+  warn: core.warning,
+  error: core.error
+}
+
+
+/***/ }),
+
+/***/ 6221:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const assert = __nccwpck_require__(8061)
+const xml2js = __nccwpck_require__(6189)
+
+const UNKNOWN_VALUE = '❓'
+
+/** @private */
+class Mutation {
+  static Detected = new Map(
+    Object.entries({
+      ['true']: '✅',
+      ['false']: '❌'
+    })
+  )
+
+  static Status = new Map(
+    Object.entries({
+      KILLED: '💀',
+      SURVIVED: '🧬',
+      TIMED_OUT: '🕰️',
+      NON_VIABLE: '🛑',
+      MEMORY_ERROR: '💾',
+      RUN_ERROR: '🛠️',
+      NO_COVERAGE: '🔍'
+    })
+  )
+
+  #method
+  #lineNumber
+  #detected
+  #status
+  #description
+  #logger
+
+  constructor(mutation, deps = { logger: globalThis.console }) {
+    this.#method = mutation.mutatedMethod[0]
+    this.#lineNumber = mutation.lineNumber[0]
+    this.#detected = mutation.$.detected
+    this.#status = mutation.$.status
+    this.#description = mutation.description[0]
+
+    this.#logger = deps.logger
+  }
+
+  set detected(value) {
+    assert(this instanceof Mutation)
+    if (!Mutation.Detected.has(value)) {
+      this.#logger.warn(`Unknown value for Mutation.Detected: ${value}`)
+    }
+
+    this.#detected = Mutation.Detected.get(value) ?? UNKNOWN_VALUE
+  }
+
+  get detected() {
+    assert(this instanceof Mutation)
+
+    return this.#detected
+  }
+
+  set status(value) {
+    assert(this instanceof Mutation)
+    if (!Mutation.Status.has(value)) {
+      this.#logger.warn(`Unknown value for Mutation.Status: ${value}`)
+    }
+
+    this.#status = Mutation.Status.get(value) ?? UNKNOWN_VALUE
+  }
+
+  get status() {
+    assert(this instanceof Mutation)
+
+    return this.#status
+  }
+
+  get description() {
+    assert(this instanceof Mutation)
+
+    return this.#description
+  }
+
+  get method() {
+    assert(this instanceof Mutation)
+
+    return this.#method
+  }
+
+  get lineNumber() {
+    assert(this instanceof Mutation)
+
+    return this.#lineNumber
+  }
+
+  toString() {
+    assert(this instanceof Mutation)
+
+    return `${this.#detected} \`${this.#method}\` (Line ${this.#lineNumber}) - ${this.#description} ${this.status}`
+  }
+}
+
+class MarkdownReport {
+  #xmlParser
+  #mutations
+  #displayOnlySurvived
+  #logger
+
+  constructor(
+    args = { displayOnlySurvived: false, logger: globalThis.console }
+  ) {
+    this.#xmlParser = new xml2js.Parser()
+    this.#mutations = []
+    this.#displayOnlySurvived = args.displayOnlySurvived
+    this.#logger = args.logger
+  }
+
+  async fromXml(xmlString) {
+    assert(this instanceof MarkdownReport)
+
+    const { mutations } = await this.#xmlParser.parseStringPromise(xmlString)
+    this.#mutations = mutations.mutation
+  }
+
+  toString() {
+    assert(this instanceof MarkdownReport)
+
+    let reportContent = MarkdownReport.header
+    for (const [file, mutations] of Object.entries(this.#fileGroups)) {
+      reportContent += `### Mutations in ${file}\n`
+      for (const mutation of mutations) {
+        reportContent += `- ${mutation}\n`
+      }
+      reportContent += '\n'
+    }
+  }
+
+  static get header() {
+    return `
 # Mutation Test Summary
         
 ## Overview
 
-This report provides an overview of mutation testing results, grouped by file. Each entry details a mutation attempt, its detection status, and specific mutation description.
-
+This report provides an overview of mutation testing results, grouped by file. 
+Each entry details a mutation attempt, its detection status, and specific mutation description.
 `.trimStart() // Removes the first new line, before "# Mutation Test Summary"
+  }
+
+  get #fileGroups() {
+    assert(this instanceof MarkdownReport)
+
+    const value = this.#mutations.reduce((acc, mutation) => {
+      const [file] = mutation.sourceFile
+      if (!acc[file]) acc[file] = []
+      const line = new Mutation(mutation, { logger: this.#logger })
+
+      if (
+        !this.#displayOnlySurvived ||
+        line.status === Mutation.Status.get('SURVIVED')
+      ) {
+        acc[file].push(line)
+      }
+      return acc
+    }, {})
+
+    return value
+  }
+}
+
+module.exports = {
+  MarkdownReport
+}
+
+
+/***/ }),
+
+/***/ 1713:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const fs = __nccwpck_require__(3977)
+const core = __nccwpck_require__(2186)
+const { MarkdownReport } = __nccwpck_require__(6221)
+const { logger } = __nccwpck_require__(5945)
 
 async function run() {
   // Read inputs of the action
@@ -31560,41 +31742,16 @@ async function run() {
     required: false
   })
 
-  const parser = new xml2js.Parser()
-  let data = null
   try {
-    data = await fs.readFile(filePath)
-    let result = null
+    const data = await fs.readFile(filePath)
+    const report = new MarkdownReport({
+      displayOnlySurvived: Boolean(displayOnlySurvived),
+      logger
+    })
     try {
-      result = await parser.parseStringPromise(data)
-      const mutationsResult = result.mutations.mutation
-      const fileGroups = mutationsResult.reduce((acc, mutation) => {
-        const file = mutation.sourceFile[0]
-        if (!acc[file]) acc[file] = []
-        const method = mutation.mutatedMethod[0]
-        const lineNumber = mutation.lineNumber[0]
-        const detected = mutation.$.detected === 'true' ? '✅' : '❌'
-        const status = mutation.$.status === 'KILLED' ? '💀' : '🚶'
-        const description = mutation.description[0]
-
-        if (!displayOnlySurvived || status === '🚶') {
-          acc[file].push(
-            `${detected} \`${method}\` (Line ${lineNumber}) - ${description} ${status}`
-          )
-        }
-        return acc
-      }, {})
-
-      for (const [file, mutations] of Object.entries(fileGroups)) {
-        reportContent += `### Mutations in ${file}\n`
-        for (const mutation of mutations) {
-          reportContent += `- ${mutation}\n`
-        }
-        reportContent += '\n'
-      }
-
+      await report.fromXml(data)
       // Write directly to the GitHub Step Summary using @actions/core
-      await core.summary.addRaw(reportContent).write()
+      await core.summary.addRaw(report).write()
     } catch (parseError) {
       core.setFailed(`Error parsing XML: ${parseError.message}`)
     }
@@ -31703,6 +31860,14 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 8061:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:assert");
 
 /***/ }),
 
