@@ -14,8 +14,9 @@ This report provides an overview of mutation testing results, grouped by file. E
 async function run() {
   // Read inputs of the action
   const filePath = core.getInput('file-path', { required: true })
-  const displayOnlySurvived =
-    core.getInput('display-only-survived', { required: false }) === 'true'
+  const displayOnlySurvived = core.getBooleanInput('display-only-survived', {
+    required: false
+  })
 
   const parser = new xml2js.Parser()
   let data = null
