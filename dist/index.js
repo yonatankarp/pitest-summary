@@ -31594,7 +31594,7 @@ async function run() {
       }
 
       // Write directly to the GitHub Step Summary using @actions/core
-      core.summary.addRaw(reportContent).write()
+      await core.summary.addRaw(reportContent).write()
     } catch (parseError) {
       core.setFailed(`Error parsing XML: ${parseError.message}`)
     }
