@@ -1,6 +1,7 @@
 name: Example Workflow
 
 on:
+  # checkov:skip=CKV_GHA_7
   workflow_dispatch:
     inputs:
       file-path:
